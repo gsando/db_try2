@@ -1,13 +1,14 @@
-import 'package:drift/native.dart';
+// import 'package:drift/native.dart';
 import 'data.dart';
 
 Future<void> main() async {
-  final db = Database(NativeDatabase.memory());
+  final database = MyDatabase();
 
-  (await db.select(db.products).get()).forEach(print);
+  // Simple insert:
+  await database.into(database.exercise).insert(ExerciseCompanion.insert(
+      title: 'breathing', description: 'my first category'));
 
-  await db.into(db.products).insert(ProductsCompanion.insert(
-      title: "Flutter drift", description: "Drift DB"));
-
-  (await db.select(db.products).get()).forEach(print);
+  // Simple select:
+  final allExs = await database.select(database.exercise).get();
+  print('Categories in database: $allExs');
 }

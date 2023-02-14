@@ -3,11 +3,12 @@
 part of 'data.dart';
 
 // ignore_for_file: type=lint
-class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
+class $ExerciseTable extends Exercise
+    with TableInfo<$ExerciseTable, ExerciseData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $ProductsTable(this.attachedDatabase, [this._alias]);
+  $ExerciseTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -21,21 +22,41 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
       'title', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 32),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
   static const VerificationMeta _descriptionMeta =
       const VerificationMeta('description');
   @override
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, false,
+      'body', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _minutesMeta =
+      const VerificationMeta('minutes');
   @override
-  List<GeneratedColumn> get $columns => [id, title, description];
+  late final GeneratedColumn<int> minutes = GeneratedColumn<int>(
+      'minutes', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _secondsMeta =
+      const VerificationMeta('seconds');
   @override
-  String get aliasedName => _alias ?? 'products';
+  late final GeneratedColumn<int> seconds = GeneratedColumn<int>(
+      'seconds', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   @override
-  String get actualTableName => 'products';
+  List<GeneratedColumn> get $columns =>
+      [id, title, description, minutes, seconds];
   @override
-  VerificationContext validateIntegrity(Insertable<Product> instance,
+  String get aliasedName => _alias ?? 'exercise';
+  @override
+  String get actualTableName => 'exercise';
+  @override
+  VerificationContext validateIntegrity(Insertable<ExerciseData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -48,13 +69,19 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
-    if (data.containsKey('description')) {
-      context.handle(
-          _descriptionMeta,
-          description.isAcceptableOrUnknown(
-              data['description']!, _descriptionMeta));
+    if (data.containsKey('body')) {
+      context.handle(_descriptionMeta,
+          description.isAcceptableOrUnknown(data['body']!, _descriptionMeta));
     } else if (isInserting) {
       context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('minutes')) {
+      context.handle(_minutesMeta,
+          minutes.isAcceptableOrUnknown(data['minutes']!, _minutesMeta));
+    }
+    if (data.containsKey('seconds')) {
+      context.handle(_secondsMeta,
+          seconds.isAcceptableOrUnknown(data['seconds']!, _secondsMeta));
     }
     return context;
   }
@@ -62,54 +89,70 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Product map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ExerciseData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Product(
+    return ExerciseData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       title: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
       description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}body'])!,
+      minutes: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}minutes'])!,
+      seconds: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}seconds'])!,
     );
   }
 
   @override
-  $ProductsTable createAlias(String alias) {
-    return $ProductsTable(attachedDatabase, alias);
+  $ExerciseTable createAlias(String alias) {
+    return $ExerciseTable(attachedDatabase, alias);
   }
 }
 
-class Product extends DataClass implements Insertable<Product> {
+class ExerciseData extends DataClass implements Insertable<ExerciseData> {
   final int id;
   final String title;
   final String description;
-  const Product(
-      {required this.id, required this.title, required this.description});
+  final int minutes;
+  final int seconds;
+  const ExerciseData(
+      {required this.id,
+      required this.title,
+      required this.description,
+      required this.minutes,
+      required this.seconds});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['title'] = Variable<String>(title);
-    map['description'] = Variable<String>(description);
+    map['body'] = Variable<String>(description);
+    map['minutes'] = Variable<int>(minutes);
+    map['seconds'] = Variable<int>(seconds);
     return map;
   }
 
-  ProductsCompanion toCompanion(bool nullToAbsent) {
-    return ProductsCompanion(
+  ExerciseCompanion toCompanion(bool nullToAbsent) {
+    return ExerciseCompanion(
       id: Value(id),
       title: Value(title),
       description: Value(description),
+      minutes: Value(minutes),
+      seconds: Value(seconds),
     );
   }
 
-  factory Product.fromJson(Map<String, dynamic> json,
+  factory ExerciseData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Product(
+    return ExerciseData(
       id: serializer.fromJson<int>(json['id']),
       title: serializer.fromJson<String>(json['title']),
       description: serializer.fromJson<String>(json['description']),
+      minutes: serializer.fromJson<int>(json['minutes']),
+      seconds: serializer.fromJson<int>(json['seconds']),
     );
   }
   @override
@@ -119,68 +162,98 @@ class Product extends DataClass implements Insertable<Product> {
       'id': serializer.toJson<int>(id),
       'title': serializer.toJson<String>(title),
       'description': serializer.toJson<String>(description),
+      'minutes': serializer.toJson<int>(minutes),
+      'seconds': serializer.toJson<int>(seconds),
     };
   }
 
-  Product copyWith({int? id, String? title, String? description}) => Product(
+  ExerciseData copyWith(
+          {int? id,
+          String? title,
+          String? description,
+          int? minutes,
+          int? seconds}) =>
+      ExerciseData(
         id: id ?? this.id,
         title: title ?? this.title,
         description: description ?? this.description,
+        minutes: minutes ?? this.minutes,
+        seconds: seconds ?? this.seconds,
       );
   @override
   String toString() {
-    return (StringBuffer('Product(')
+    return (StringBuffer('ExerciseData(')
           ..write('id: $id, ')
           ..write('title: $title, ')
-          ..write('description: $description')
+          ..write('description: $description, ')
+          ..write('minutes: $minutes, ')
+          ..write('seconds: $seconds')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, title, description);
+  int get hashCode => Object.hash(id, title, description, minutes, seconds);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Product &&
+      (other is ExerciseData &&
           other.id == this.id &&
           other.title == this.title &&
-          other.description == this.description);
+          other.description == this.description &&
+          other.minutes == this.minutes &&
+          other.seconds == this.seconds);
 }
 
-class ProductsCompanion extends UpdateCompanion<Product> {
+class ExerciseCompanion extends UpdateCompanion<ExerciseData> {
   final Value<int> id;
   final Value<String> title;
   final Value<String> description;
-  const ProductsCompanion({
+  final Value<int> minutes;
+  final Value<int> seconds;
+  const ExerciseCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
     this.description = const Value.absent(),
+    this.minutes = const Value.absent(),
+    this.seconds = const Value.absent(),
   });
-  ProductsCompanion.insert({
+  ExerciseCompanion.insert({
     this.id = const Value.absent(),
     required String title,
     required String description,
+    this.minutes = const Value.absent(),
+    this.seconds = const Value.absent(),
   })  : title = Value(title),
         description = Value(description);
-  static Insertable<Product> custom({
+  static Insertable<ExerciseData> custom({
     Expression<int>? id,
     Expression<String>? title,
     Expression<String>? description,
+    Expression<int>? minutes,
+    Expression<int>? seconds,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (title != null) 'title': title,
-      if (description != null) 'description': description,
+      if (description != null) 'body': description,
+      if (minutes != null) 'minutes': minutes,
+      if (seconds != null) 'seconds': seconds,
     });
   }
 
-  ProductsCompanion copyWith(
-      {Value<int>? id, Value<String>? title, Value<String>? description}) {
-    return ProductsCompanion(
+  ExerciseCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? title,
+      Value<String>? description,
+      Value<int>? minutes,
+      Value<int>? seconds}) {
+    return ExerciseCompanion(
       id: id ?? this.id,
       title: title ?? this.title,
       description: description ?? this.description,
+      minutes: minutes ?? this.minutes,
+      seconds: seconds ?? this.seconds,
     );
   }
 
@@ -194,108 +267,36 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       map['title'] = Variable<String>(title.value);
     }
     if (description.present) {
-      map['description'] = Variable<String>(description.value);
+      map['body'] = Variable<String>(description.value);
+    }
+    if (minutes.present) {
+      map['minutes'] = Variable<int>(minutes.value);
+    }
+    if (seconds.present) {
+      map['seconds'] = Variable<int>(seconds.value);
     }
     return map;
   }
 
   @override
   String toString() {
-    return (StringBuffer('ProductsCompanion(')
+    return (StringBuffer('ExerciseCompanion(')
           ..write('id: $id, ')
           ..write('title: $title, ')
-          ..write('description: $description')
+          ..write('description: $description, ')
+          ..write('minutes: $minutes, ')
+          ..write('seconds: $seconds')
           ..write(')'))
         .toString();
   }
 }
 
-class ProductsViewData extends DataClass {
-  final String title;
-  const ProductsViewData({required this.title});
-  factory ProductsViewData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ProductsViewData(
-      title: serializer.fromJson<String>(json['title']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'title': serializer.toJson<String>(title),
-    };
-  }
-
-  ProductsViewData copyWith({String? title}) => ProductsViewData(
-        title: title ?? this.title,
-      );
-  @override
-  String toString() {
-    return (StringBuffer('ProductsViewData(')
-          ..write('title: $title')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => title.hashCode;
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is ProductsViewData && other.title == this.title);
-}
-
-class $ProductsViewView extends ViewInfo<$ProductsViewView, ProductsViewData>
-    implements HasResultSet {
-  final String? _alias;
-  @override
-  final _$Database attachedDatabase;
-  $ProductsViewView(this.attachedDatabase, [this._alias]);
-  $ProductsTable get products => attachedDatabase.products.createAlias('t0');
-  @override
-  List<GeneratedColumn> get $columns => [title];
-  @override
-  String get aliasedName => _alias ?? entityName;
-  @override
-  String get entityName => 'products_view';
-  @override
-  String? get createViewStmt => null;
-  @override
-  $ProductsViewView get asDslTable => this;
-  @override
-  ProductsViewData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ProductsViewData(
-      title: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
-    );
-  }
-
-  late final GeneratedColumn<String> title = GeneratedColumn<String>(
-      'title', aliasedName, false,
-      generatedAs: GeneratedAs(products.title, false),
-      type: DriftSqlType.string);
-  @override
-  $ProductsViewView createAlias(String alias) {
-    return $ProductsViewView(attachedDatabase, alias);
-  }
-
-  @override
-  Query? get query =>
-      (attachedDatabase.selectOnly(products)..addColumns($columns));
-  @override
-  Set<String> get readTables => const {'products'};
-}
-
-abstract class _$Database extends GeneratedDatabase {
-  _$Database(QueryExecutor e) : super(e);
-  late final $ProductsTable products = $ProductsTable(this);
-  late final $ProductsViewView productsView = $ProductsViewView(this);
+abstract class _$MyDatabase extends GeneratedDatabase {
+  _$MyDatabase(QueryExecutor e) : super(e);
+  late final $ExerciseTable exercise = $ExerciseTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [products, productsView];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [exercise];
 }
